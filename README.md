@@ -1,12 +1,12 @@
 # Agent User Learning (AUL)
 
-**User context for agents.**
+**Learn from what users tell an agent.**
 
 [中文说明](README.zh-CN.md) · [Protocol](skills/agent-user-learning/references/protocol.md) · [Integration](skills/agent-user-learning/references/integration.md)
 
 AUL stores what users share about their interests, preferences, goals, habits and background. Agents read the relevant context for a task, use it to guide their work, and update it when the user makes a correction.
 
-For example, a user prefers brief progress messages while coding but detailed edits when reviewing a draft. AUL keeps these preferences in their respective scopes so the agent can use the appropriate format for each task.
+For example, a user asks for brief progress updates while coding and detailed comments when reviewing a draft. AUL keeps the two preferences under separate task labels, so the agent can use the appropriate one next time.
 
 Use the Python SDK, CLI or portable Skill to add user context to an agent or application.
 
@@ -27,7 +27,7 @@ Use the Python SDK, CLI or portable Skill to add user context to an agent or app
 | Current state | Busy today, with an expiry | Adapt this session without making a permanent assumption |
 | Help preferences | Short examples; explanation before code | Adjust communication and workflow |
 
-These become two projections: **user attributes** describe the user; **behavior rules** describe how to help. The host agent uses both to make decisions. AUL stores bounded evidence and provenance, supports correction and forgetting, and builds a small task-specific context. It does not train model weights or parse conversations by itself.
+**User attributes** describe the user's background and needs. **Behavior rules** describe how they want help. Each record keeps its source, and the user can correct or forget it. An agent reads a small set of relevant records for the current task.
 
 ## Try it locally
 
@@ -38,13 +38,15 @@ python -m pip install .
 python examples/user_learning_demo.py
 ```
 
-The demo uses an in-memory synthetic user. It shows a goal, interests, a help preference, a corrected dislike, and forgetting. No API key or network request is required.
+The offline demo uses a fictional user and an in-memory database. It shows how a goal and a preference enter the context, how a correction replaces an old value, and what remains after forgetting.
+
+To use the SDK, run this example from the repository directory after installation:
 
 ```python
 from agent_user_learning import UserLearner
 
-# Choose a private location, outside your repository, with one database per user.
-with UserLearner("/private/app-data/user-123.db", "user-123") as learner:
+# Store the demo database beside the repository.
+with UserLearner("../aul-demo.db", "demo-user") as learner:
     learner.observe({
         "event_id": "extract:user-message-42:goal",
         "source_id": "user-message-42",
@@ -58,15 +60,18 @@ with UserLearner("/private/app-data/user-123.db", "user-123") as learner:
     }, expected_version=learner.version)
     context = learner.context(["writing", "writing:blog"])
     # Give this context to your agent as lower-priority user data.
+    print(context["user"]["goals"])
 ```
 
-The parent directory must exist. The sample path is a placeholder; the host chooses storage and access controls.
+This writes a fictional goal to `../aul-demo.db`. You can inspect the same database with the CLI:
 
 ```sh
-aul --db /private/app-data/user-123.db --user-id user-123 context --scope writing:blog
-aul --db /private/app-data/user-123.db --user-id user-123 inspect
-aul --db /private/app-data/user-123.db --user-id user-123 explain --kind attribute --rule-id 'writing:blog|goals.finish-draft'
+aul --db ../aul-demo.db --user-id demo-user context --scope writing:blog
+aul --db ../aul-demo.db --user-id demo-user inspect
+aul --db ../aul-demo.db --user-id demo-user explain --kind attribute --rule-id 'writing:blog|goals.finish-draft'
 ```
+
+For real users, choose a private location outside the repository, create its parent directory, and keep a separate database for each user.
 
 ## Use as a Skill
 
@@ -78,21 +83,21 @@ Copy the complete `skills/agent-user-learning` directory into the location used 
 | Claude Code | `.claude/skills/agent-user-learning/` | `~/.claude/skills/agent-user-learning/` |
 | OpenCode | `.opencode/skills/agent-user-learning/` | `~/.config/opencode/skills/agent-user-learning/` |
 
-See the hosts' official [Codex](https://developers.openai.com/codex/skills/), [Claude Code](https://code.claude.com/docs/en/skills), and [OpenCode](https://opencode.ai/docs/skills/) documentation. A custom agent can call the SDK or CLI directly. Installation exposes instructions; automatic pre-turn and post-turn hooks must be implemented by the host.
+See the hosts' official [Codex](https://developers.openai.com/codex/skills/), [Claude Code](https://code.claude.com/docs/en/skills), and [OpenCode](https://opencode.ai/docs/skills/) documentation. The host needs to call AUL before and after tasks; copying the Skill exposes its instructions and runtime but does not create those calls. See [Integration](skills/agent-user-learning/references/integration.md) for the workflow.
 
 ## How learning works
 
-1. Before a task, the host chooses relevant scopes and reads a frozen `context()` snapshot.
-2. The agent uses relevant user understanding and help preferences while respecting the current request.
-3. After an interaction, the host extracts small structured changes from trusted user evidence. Explicit statements and corrections apply immediately. Inferred interests or habits need matching evidence from two distinct sources in two sessions. Identity and constraints require explicit evidence.
-4. The host writes events with the current version. Duplicate retries are idempotent; stale writes and stale feedback are rejected.
-5. Corrections replace relevant values. Rejected behavior is disabled. Inspect, explain and forget operations let the user control what is learned.
+1. Your application chooses task labels, called scopes, and reads `context()` before the agent starts work.
+2. The agent uses the relevant context along with the user's current request.
+3. After the interaction, your application turns useful user statements into structured events and writes them to AUL.
+4. Explicit statements and corrections take effect when written. Inferred interests or habits need matching evidence from two distinct sources in two sessions. Profile and constraint records require explicit statements.
+5. The user can inspect, explain, correct or forget records.
 
-Scopes are explicit labels, not an automatic topic classifier. `general` is always included; later supplied scopes override earlier ones for the same key. Inferences cannot replace an explicit value in the same scope. Temporary `current.*` attributes require an expiry. Like/dislike keys for the same item use the same suffix so a correction can replace the opposite taste.
+Your application selects the scopes. `general` is always included, and later supplied scopes take precedence for the same key. Temporary `current.*` records need an expiry. Inferences cannot replace explicit records in the same scope. The [Protocol](skills/agent-user-learning/references/protocol.md) covers event formats, version checks, retries and forgetting.
 
 ## Status and development
 
-Version **0.1.0** is a working local prototype. Runtime dependencies: none. SQLite event replay supplies provenance and user isolation checks. The host remains responsible for extraction quality, relevance, authentication, storage permissions and deletion from backups. Schema 2 rejects earlier prototype databases; no schema migration is included.
+Version **0.1.0** is a local prototype built with Python's standard library and SQLite. AUL processes structured events; the host supplies extraction from messages, task selection and agent calls. The host also handles authentication, storage permissions and deletion from backups. The database uses schema 2; migration from earlier prototypes is not included.
 
 ```sh
 python -m pip install .
@@ -102,6 +107,6 @@ python scripts/sync_skill.py --check
 
 Change the SDK engine first, then run `python scripts/sync_skill.py` to regenerate the portable runtime. Tests cover user understanding, behavior adaptation, scope precedence, expiry, forgetting, replay, concurrent writers, bounded context and offline CLI portability.
 
-Next priorities are host adapters, real interaction evaluations and better relevance selection. Measure fewer repeated corrections and better task completion before claiming improved user satisfaction. Full transcripts, project knowledge and agent persona may remain in separate systems; user understanding belongs here when it improves help.
+Next steps are host adapters and real interaction testing: whether users need fewer repeated corrections, whether tasks are completed more effectively, and whether irrelevant preferences stay out of the response.
 
 Licensed under [MIT](LICENSE).

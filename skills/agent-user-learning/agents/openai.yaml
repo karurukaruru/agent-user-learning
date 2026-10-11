@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent User Learning"
+  short_description: "Understand users and adapt how agents help them"
+  default_prompt: "Use $agent-user-learning to apply relevant user understanding, learn useful interests, goals and help preferences, and revise them from corrections."

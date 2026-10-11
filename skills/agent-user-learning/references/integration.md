@@ -1,8 +1,7 @@
 # Integrating AUL into an agent or product
 
-AUL is a user understanding and adaptation component. Any agent that can run
-Python or call a process can use it. The SDK and portable Skill runtime share
-one engine; no OpenWoven import or external service is required.
+Call AUL through the Python SDK or CLI to read user context and record updates.
+The SDK and portable Skill runtime share one engine.
 
 ## Host lifecycle
 
@@ -35,7 +34,7 @@ events, not whether an extractor has honestly represented the user.
 from agent_user_learning import UserLearner, VersionConflict
 
 with UserLearner(private_db, authenticated_user_id) as learner:
-    snapshot = learner.context(["study", "study:japanese"])
+    snapshot = learner.context(["writing", "writing:blog"])
     # Host: respond using this snapshot and the current request.
     # Host: extract an event from a trusted user statement.
     # learner.observe(event, expected_version=snapshot["version"])

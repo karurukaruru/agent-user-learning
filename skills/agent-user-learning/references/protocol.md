@@ -21,11 +21,11 @@ Scope/key identifiers use lowercase letters, digits and `._:/-`; `|` is reserved
     "source_id": "user-message-42",
     "session_id": "session-7",
     "kind": "attribute",
-    "scope": "study:japanese",
-    "key": "goals.pass-n4",
-    "value": "Wants to pass JLPT N4.",
+    "scope": "writing:blog",
+    "key": "goals.finish-draft",
+    "value": "Wants to finish a first draft.",
     "signal": "explicit",
-    "evidence": "User says they want to pass JLPT N4."
+    "evidence": "User says they want to finish a first draft."
   }
 }
 ```
@@ -34,9 +34,9 @@ Scope/key identifiers use lowercase letters, digits and `._:/-`; `|` is reserved
 | --- | --- | --- |
 | `profile` | `profile.name`, `profile.experience` | Explicit user evidence required |
 | `interests` | `interests.music` | Explicit or corroborated inference |
-| `likes` | `likes.city-pop` | Shares suffix with opposite dislike |
-| `dislikes` | `dislikes.city-pop` | Active entry replaces opposite in same scope |
-| `goals` | `goals.pass-n4` | A concrete user goal |
+| `likes` | `likes.background-music` | Shares suffix with opposite dislike |
+| `dislikes` | `dislikes.background-music` | Active entry replaces opposite in same scope |
+| `goals` | `goals.finish-draft` | A concrete user goal |
 | `habits` | `habits.study-session` | A useful recurring routine |
 | `constraints` | `constraints.accessibility` | Explicit user evidence required |
 | `current` | `current.energy` | Requires `expires_at` |
@@ -59,7 +59,7 @@ A `preference` uses the same metadata, with a concrete `action` instead of
     "source_id": "user-message-43",
     "session_id": "session-7",
     "kind": "preference",
-    "scope": "study:japanese",
+    "scope": "writing:blog",
     "key": "examples.format",
     "action": "Use short worked examples.",
     "signal": "explicit",
@@ -84,7 +84,7 @@ Explicit records cannot be replaced by inferences in the same scope.
     "event_id": "evaluate:reply-8",
     "source_id": "user-message-44",
     "kind": "feedback",
-    "rule_id": "study:japanese|examples.format",
+    "rule_id": "writing:blog|examples.format",
     "rule_revision": 2,
     "outcome": "accepted",
     "evidence": "User explicitly confirms the short example format helped."
@@ -117,7 +117,7 @@ goals and current state before optional interests, reserves room for behavior
 when present, and drops entries to fit the serialized character budget. These
 are character caps, not provider token limits. Evidence stays out of context.
 The host must select relevant scopes; no implicit ancestry or topic classifier
-is supplied. `study:japanese` does not automatically include `study`.
+is supplied. `writing:blog` does not automatically include `writing`.
 
 ## Writes, retries and forgetting
 
@@ -128,7 +128,7 @@ stale writes fail with `VersionConflict`; reread and reassess before retrying.
 CLI failures return exit 2 with a generic error code, without echoing evidence.
 
 ```sh
-python <skill-dir>/scripts/aul.py --db <private-db> --user-id <user-id> forget-rule --scope music --key likes.city-pop --kind attribute --expected-version <current-version>
+python <skill-dir>/scripts/aul.py --db <private-db> --user-id <user-id> forget-rule --scope writing --key likes.background-music --kind attribute --expected-version <current-version>
 python <skill-dir>/scripts/aul.py --db <private-db> --user-id <user-id> forget --source-id <source-id> --expected-version <current-version>
 ```
 

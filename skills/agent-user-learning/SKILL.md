@@ -17,7 +17,7 @@ current task. Let the user correct it; do not try to change the user.
    `--user-id` consistently. If the host offers no private location, apply
    relevant information within the current conversation without claiming it
    has been saved. The parent directory must exist.
-2. Choose relevant task/topic scopes, such as `study`, `study:japanese`,
+2. Choose relevant task/topic scopes, such as `writing`, `writing:blog`,
    `music`, `coding`, or `project:my-repo`. Read `context`, not the lifetime
    ledger. `general` is included automatically; later scopes override earlier
    ones for matching keys. Read [the protocol](references/protocol.md) before
@@ -33,7 +33,7 @@ current task. Let the user correct it; do not try to change the user.
    or demands for feedback.
 
 ```sh
-python <skill-dir>/scripts/aul.py --db <private-db> --user-id <user-id> context --scope study --scope study:japanese
+python <skill-dir>/scripts/aul.py --db <private-db> --user-id <user-id> context --scope writing --scope writing:blog
 ```
 
 ## Learn after an interaction
@@ -55,7 +55,7 @@ python <skill-dir>/scripts/aul.py --db <private-db> --user-id <user-id> context 
    distinct sources in two sessions. Never fabricate corroboration or let
    inference override explicit understanding in the same scope.
 4. Choose the narrowest useful scope and stable key. Use the same suffix
-   for opposite tastes, such as `likes.city-pop` and `dislikes.city-pop`.
+   for opposite tastes, such as `likes.background-music` and `dislikes.background-music`.
    A user's changed taste should replace the opposite entry in that scope.
    `current.*` requires an expiry. One-task instructions normally remain
    within the task; a temporary recurring preference may use an expiry.

@@ -1,22 +1,28 @@
 # Agent User Learning (AUL)
 
-**Help agents understand the user and adapt how they help.**
+**User context for agents.**
 
 [中文说明](README.zh-CN.md) · [Protocol](skills/agent-user-learning/references/protocol.md) · [Integration](skills/agent-user-learning/references/integration.md)
 
-AUL is an independent, MIT-licensed user understanding and adaptation layer. It learns what a user shares about themselves, their interests, likes and dislikes, goals and habits, and how they want help. It selects relevant understanding for the next task and revises it when the user corrects it.
+AUL stores what users share about their interests, preferences, goals, habits and background. Agents read the relevant context for a task, use it to guide their work, and update it when the user makes a correction.
 
-For example: a learner says they want to pass JLPT N4, enjoy city pop, and prefer short worked examples. An agent can use that context to choose suitable practice and examples. If the learner later asks for quiet study sessions or changes their goal, AUL updates the relevant context.
+For example, a user prefers brief progress messages while coding but detailed edits when reviewing a draft. AUL keeps these preferences in their respective scopes so the agent can use the appropriate format for each task.
 
-The project provides a Python SDK, an offline CLI, and a portable agent Skill. It does not depend on OpenWoven, a particular model, or a hosted service.
+Use the Python SDK, CLI or portable Skill to add user context to an agent or application.
+
+## Where to use it
+
+- Coding agents: keep preferences for explanations, code review and progress updates.
+- Writing and study tools: use relevant goals, experience and preferred examples.
+- Messaging apps: supply preferences for reply length and format; update them from user corrections.
 
 ## What it learns
 
 | Category | Example | Effect on help |
 | --- | --- | --- |
 | Profile | User-stated name or experience | Address the user appropriately; choose a suitable starting level |
-| Interests, likes, dislikes | Enjoys music; wants quiet when studying | Select relevant examples and avoid unwanted suggestions |
-| Goals | Learn Japanese for travel | Prioritize useful exercises |
+| Interests, likes, dislikes | Prefers a quiet workspace | Avoid unwanted suggestions in a work context |
+| Goals | Finish a first draft | Prioritize the next useful step |
 | Habits and constraints | Studies in short sessions; needs accessible formatting | Fit plans to the user's routine and stated needs |
 | Current state | Busy today, with an expiry | Adapt this session without making a permanent assumption |
 | Help preferences | Short examples; explanation before code | Adjust communication and workflow |
@@ -44,22 +50,22 @@ with UserLearner("/private/app-data/user-123.db", "user-123") as learner:
         "source_id": "user-message-42",
         "session_id": "session-7",
         "kind": "attribute",
-        "scope": "study:japanese",
-        "key": "goals.pass-n4",
-        "value": "Wants to pass JLPT N4.",
+        "scope": "writing:blog",
+        "key": "goals.finish-draft",
+        "value": "Wants to finish a first draft.",
         "signal": "explicit",
-        "evidence": "User says they want to pass JLPT N4."
+        "evidence": "User says they want to finish a first draft."
     }, expected_version=learner.version)
-    context = learner.context(["study", "study:japanese"])
+    context = learner.context(["writing", "writing:blog"])
     # Give this context to your agent as lower-priority user data.
 ```
 
 The parent directory must exist. The sample path is a placeholder; the host chooses storage and access controls.
 
 ```sh
-aul --db /private/app-data/user-123.db --user-id user-123 context --scope study:japanese
+aul --db /private/app-data/user-123.db --user-id user-123 context --scope writing:blog
 aul --db /private/app-data/user-123.db --user-id user-123 inspect
-aul --db /private/app-data/user-123.db --user-id user-123 explain --kind attribute --rule-id 'study:japanese|goals.pass-n4'
+aul --db /private/app-data/user-123.db --user-id user-123 explain --kind attribute --rule-id 'writing:blog|goals.finish-draft'
 ```
 
 ## Use as a Skill

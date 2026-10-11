@@ -114,9 +114,10 @@ class UserLearner:
             if not isinstance(result.get("signal"), str) or result["signal"] not in {"explicit", "correction", "inferred"}:
                 raise ValueError("invalid signal")
             if kind == "attribute":
-                group = result["key"].split(".")[0]
-                if group not in ATTRIBUTE_GROUPS or "." not in result["key"]:
+                group, separator, field = result["key"].partition(".")
+                if group not in ATTRIBUTE_GROUPS or not separator:
                     raise ValueError("attribute key requires a supported group and field")
+                _label(field, "attribute field")
                 if group in {"profile", "constraints"} and result["signal"] == "inferred":
                     raise ValueError("identity and constraints require explicit user evidence")
                 if group == "current" and not result.get("expires_at"):
@@ -222,7 +223,7 @@ class UserLearner:
 
     def explain(self, rule_id: str, *, kind: str = "preference") -> dict:
         _text(rule_id, "rule_id", 170)
-        if kind not in {"preference", "attribute"}:
+        if not isinstance(kind, str) or kind not in {"preference", "attribute"}:
             raise ValueError("invalid explanation kind")
         with self._lock, self._db:
             self._db.execute("BEGIN")
@@ -345,7 +346,7 @@ class UserLearner:
     def forget_rule(self, scope: str, key: str, *, expected_version: int, kind: str = "preference") -> dict:
         """Forget all revisions; a taste item deletes both like/dislike histories."""
         scope, key = _label(scope, "scope"), _label(key, "key")
-        if kind not in {"preference", "attribute"}:
+        if not isinstance(kind, str) or kind not in {"preference", "attribute"}:
             raise ValueError("invalid forget kind")
         keys = {key}
         if kind == "attribute" and key.split(".")[0] in {"likes", "dislikes"} and "." in key:

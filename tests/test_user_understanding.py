@@ -46,6 +46,24 @@ class UnderstandingTests(unittest.TestCase):
                 self.save(1, key=key, signal='inferred')
         self.assertEqual(self.store.version, 0)
 
+    def test_attribute_keys_require_a_named_field(self):
+        for key in ('profile', 'profile.', 'likes.', 'goals..study'):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                self.save(1, key=key)
+        self.assertEqual(self.store.version, 0)
+        self.assertEqual(self.store.inspect()['attributes'], [])
+
+    def test_invalid_explain_and_forget_kind_preserve_stored_understanding(self):
+        self.save(1)
+        for kind in ([], {}, None, 'unknown'):
+            with self.subTest(kind=kind):
+                with self.assertRaises(ValueError):
+                    self.store.explain('general|profile.name', kind=kind)
+                with self.assertRaises(ValueError):
+                    self.store.forget_rule('general', 'profile.name', kind=kind, expected_version=1)
+        self.assertEqual(self.store.version, 1)
+        self.assertEqual(self.store.context()['user']['profile'][0]['value'], 'Mina')
+
     def test_interest_inference_needs_distinct_sources_and_sessions(self):
         self.save(1, key='interests.music', value='Music', signal='inferred')
         self.save(2, key='interests.music', value='Music', signal='inferred')

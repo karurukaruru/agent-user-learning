@@ -2,13 +2,17 @@
 
 **Learn from what users tell an agent.**
 
-[中文说明](README.zh-CN.md) · [Protocol](skills/agent-user-learning/references/protocol.md) · [Integration](skills/agent-user-learning/references/integration.md)
+[中文说明](README.zh-CN.md) · [Architecture](docs/architecture.md) · [Protocol](skills/agent-user-learning/references/protocol.md) · [Integration](skills/agent-user-learning/references/integration.md)
 
 AUL stores what users share about their interests, preferences, goals, habits and background. Agents read the relevant context for a task, use it to guide their work, and update it when the user makes a correction.
 
 For example, a user asks for brief progress updates while coding and detailed comments when reviewing a draft. AUL keeps the two preferences under separate task labels, so the agent can use the appropriate one next time.
 
 Use the Python SDK, CLI or portable Skill to add user context to an agent or application.
+
+![Agent User Learning workflow: read relevant context, respond, extract user events, validate and update the per-user store](docs/images/aul-workflow.png)
+
+The host chooses scopes and extracts events. AUL validates, stores and selects the user context. See [Architecture](docs/architecture.md) for the data flow and write contract.
 
 ## Where to use it
 
@@ -108,5 +112,15 @@ python scripts/sync_skill.py --check
 Change the SDK engine first, then run `python scripts/sync_skill.py` to regenerate the portable runtime. Tests cover user understanding, behavior adaptation, scope precedence, expiry, forgetting, replay, concurrent writers, bounded context and offline CLI portability.
 
 Next steps are host adapters and real interaction testing: whether users need fewer repeated corrections, whether tasks are completed more effectively, and whether irrelevant preferences stay out of the response.
+
+## Project guide
+
+| Resource | Contents |
+| --- | --- |
+| [Architecture](docs/architecture.md) | Lifecycle, components, storage and conflict handling |
+| [Protocol](skills/agent-user-learning/references/protocol.md) | Event fields, scopes, context limits and user controls |
+| [Integration](skills/agent-user-learning/references/integration.md) | Host responsibilities and evaluation |
+| [Contributing](CONTRIBUTING.md) | Setup, changes, checks and reproducible reports |
+| [Changelog](CHANGELOG.md) | Prototype features and current source changes |
 
 Licensed under [MIT](LICENSE).

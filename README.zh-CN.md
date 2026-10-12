@@ -2,13 +2,17 @@
 
 **从用户告诉 agent 的信息中学习。**
 
-[English](README.md) · [事件协议](skills/agent-user-learning/references/protocol.md) · [接入方式](skills/agent-user-learning/references/integration.md)
+[English](README.md) · [架构](docs/architecture.md) · [事件协议](skills/agent-user-learning/references/protocol.md) · [接入方式](skills/agent-user-learning/references/integration.md)
 
 AUL 保存用户主动分享的兴趣、偏好、目标、习惯和背景。Agent 在执行任务时读取相关上下文，用于安排工作和调整回复；用户纠正时，更新对应记录。
 
 项目提供 Python SDK、CLI 和可安装的 Skill，可以接入 agent 或应用。
 
 例如，用户希望写代码时简短汇报进度，审阅文章时详细说明修改。AUL 分别保存这两种任务的偏好，供 agent 下次执行对应任务时使用。
+
+![AUL 工作流程：读取上下文、完成任务、提取用户事件、校验并更新用户存储](docs/images/aul-workflow.png)
+
+Host 选择场景并提取事件；AUL 校验、保存和选择用户上下文。数据流和写入约定见 [架构说明](docs/architecture.md)。
 
 ## 使用场景
 
@@ -83,5 +87,15 @@ Skill 可复制到 Codex、Claude Code、OpenCode 使用的目录，安装位置
 当前是 **0.1.0 本地原型**，使用 Python 标准库和 SQLite。AUL 处理结构化事件；接入方负责从消息提取事件、选择任务场景和调用 agent，并管理身份验证、存储权限和备份删除。数据库使用 schema 2，暂未提供早期版本的迁移工具。
 
 下一步是完善 agent 和产品的接入方式，评估重复纠正次数、任务完成情况和不相关偏好的使用情况。
+
+## 项目文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [Architecture](docs/architecture.md) | 生命周期、组件、存储和版本冲突 |
+| [Protocol](skills/agent-user-learning/references/protocol.md) | 事件格式、场景、上下文限制和用户控制 |
+| [Integration](skills/agent-user-learning/references/integration.md) | Host 接入要求和评估方式 |
+| [Contributing](CONTRIBUTING.md) | 开发环境、修改流程、检查和问题复现 |
+| [Changelog](CHANGELOG.md) | 原型功能和当前源码改动 |
 
 采用 [MIT 开源许可证](LICENSE)。

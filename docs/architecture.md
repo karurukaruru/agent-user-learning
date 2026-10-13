@@ -2,9 +2,40 @@
 
 [Project overview](../README.md) · [Event protocol](../skills/agent-user-learning/references/protocol.md) · [Host integration](../skills/agent-user-learning/references/integration.md)
 
-![AUL read and learning workflow](images/aul-workflow.png)
+## Runtime architecture
 
-[Editable SVG](images/aul-workflow.svg)
+```text
+User request / user messages
+  -> Host application
+       |-- Authentication + per-user database selection
+       |-- Task scopes + trusted message extraction
+       |-- Agent / model / tool calls
+       `-- User controls: inspect / explain / correct / forget
+            |
+            v
+       AUL entry points
+       Python SDK / JSON CLI / portable Skill runtime
+            |
+            v
+       UserLearner engine
+       |-- Read:  replay -> expiry -> scope selection -> bounded context
+       |-- Write: validate -> deduplicate -> version check -> commit
+       `-- Forget: version check -> delete evidence + feedback -> replay on read
+            |
+            v
+       Private SQLite database (one user)
+       |-- aul_meta: schema + user_id + version
+       `-- aul_events: ordered events + source IDs + evidence
+
+Read path:     Host -> AUL -> SQLite -> AUL context -> Host -> Agent
+Learning path: User message -> Host extraction -> AUL validation -> SQLite
+Conflict path: VersionConflict -> Host rereads -> Reassess -> Revised proposal
+```
+
+The SDK and CLI use the engine directly. The Skill bundles a generated copy
+of that same engine; it is another entry point, not an independent service.
+See the [task workflow](../README.md#runtime-workflow),
+[illustrated workflow](images/aul-workflow.png) or [editable SVG](images/aul-workflow.svg).
 
 ## Task lifecycle
 

@@ -170,6 +170,39 @@ class UserLearningTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 UserLearner(path, 'two')
 
+    def test_expiry_outside_utc_range_is_rejected_without_writing(self):
+        for expiry in ('0001-01-01T00:00:00+01:00', '9999-12-31T23:59:59-01:00'):
+            with self.subTest(expiry=expiry), self.assertRaises(ValueError):
+                self.send(1, expires_at=expiry)
+        self.assertEqual(self.learner.version, 0)
+        self.assertEqual(self.learner.inspect()['rules'], [])
+
+    def test_explanation_excludes_expired_evidence_from_the_same_source(self):
+        self.send(1, source_id='shared-source', evidence='Current supporting evidence.')
+        self.send(2, source_id='shared-source', evidence='Expired supporting evidence.',
+                  expires_at=(datetime.now(UTC) - timedelta(days=1)).isoformat())
+        explanation = self.learner.explain('coding|explanation.order')
+        self.assertEqual([e['event_id'] for e in explanation['evidence']], ['event-1'])
+
+    def test_cli_unicode_round_trip_on_ascii_stdout(self):
+        script = ROOT/'skills/agent-user-learning/scripts/aul.py'
+        with tempfile.TemporaryDirectory() as tmp:
+            args = [sys.executable, str(script), '--db', str(Path(tmp)/'test.db')]
+            input_path = Path(tmp)/'event.json'
+            action = '\u8bf7\u5148\u89e3\u91ca\u3002 \U0001f680'
+            input_path.write_text(json.dumps({'expected_version': 0, 'event': event(1, action=action)}), encoding='utf-8')
+            env = {**os.environ, 'PYTHONIOENCODING': 'ascii'}
+            for command in (['observe', '--input', str(input_path)], ['policy', '--scope', 'coding'],
+                            ['explain', '--rule-id', 'coding|explanation.order']):
+                with self.subTest(command=command):
+                    result = subprocess.run(args+command, cwd=tmp, env=env, capture_output=True)
+                    self.assertEqual(result.returncode, 0, result.stderr.decode('ascii', errors='replace'))
+                    payload = json.loads(result.stdout)
+                    if command[0] == 'policy':
+                        self.assertEqual(payload['rules'][0]['action'], action)
+                    elif command[0] == 'explain':
+                        self.assertEqual(payload['evidence'][0]['action'], action)
+
     def test_portable_cli_offline_and_sdk_match(self):
         script = ROOT/'skills/agent-user-learning/scripts/aul.py'
         self.assertEqual(script.read_bytes(), (ROOT/'src/agent_user_learning/engine.py').read_bytes())

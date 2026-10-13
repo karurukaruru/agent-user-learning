@@ -44,7 +44,9 @@ Scope/key identifiers use lowercase letters, digits and `._:/-`; `|` is reserved
 Choose one stable key per independently correctable item. Use values that
 accurately represent the user's statement, not diagnostic labels. Expiry is
 an ISO timestamp with timezone, for example `2026-10-12T00:00:00+08:00`.
-Expired evidence does not contribute to a derived record.
+The timestamp must also fit Python's datetime range after conversion to UTC;
+out-of-range values are rejected as invalid input. Expired evidence does not
+contribute to a derived record or its explanation.
 
 ## Help preferences
 
@@ -126,6 +128,9 @@ values are rejected. Repeating an identical `event_id` payload is idempotent,
 even with a stale version. Reusing the ID for different content fails. Other
 stale writes fail with `VersionConflict`; reread and reassess before retrying.
 CLI failures return exit 2 with a generic error code, without echoing evidence.
+CLI JSON escapes non-ASCII characters so Unicode values survive legacy terminal
+and pipe encodings; a JSON parser restores the original text. Context budgets
+are measured before this transport escaping, using `ensure_ascii=False`.
 
 ```sh
 python <skill-dir>/scripts/aul.py --db <private-db> --user-id <user-id> forget-rule --scope writing --key likes.background-music --kind attribute --expected-version <current-version>

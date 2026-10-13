@@ -10,9 +10,32 @@ For example, a user asks for brief progress updates while coding and detailed co
 
 Use the Python SDK, CLI or portable Skill to add user context to an agent or application.
 
-![Agent User Learning workflow: read relevant context, respond, extract user events, validate and update the per-user store](docs/images/aul-workflow.png)
+## Runtime workflow
 
-The host chooses scopes and extracts events. AUL validates, stores and selects the user context. See [Architecture](docs/architecture.md) for the data flow and write contract.
+```text
+[User task]
+  -> Host: resolve user + choose scopes
+  -> AUL: read per-user SQLite events
+  -> Replay + filter expiry + select relevant records
+  -> context(): user attributes + behavior rules + version
+  -> Agent: current request + bounded user context
+  -> Execute task + respond
+
+[User statements / corrections / targeted feedback]
+  -> Host: extract structured events + preserve source IDs
+  -> AUL observe(event, expected_version)
+       |-- Valid + current version -> SQLite commit -> Next context read
+       |-- Identical retry -------> No duplicate write
+       |-- Version conflict ------> Reread + reassess proposal
+       `-- Invalid event ---------> Fix input
+
+[User controls]
+  -> inspect / explain -> Records + supporting evidence
+  -> correction ------> New explicit event -> Updated context
+  -> forget_rule -----> Remove item history + feedback -> Replay
+```
+
+The host chooses scopes and extracts events. AUL validates, stores and selects the user context. Stored context is lower-priority user data and grants no permissions. See [Architecture](docs/architecture.md) for the component map and write contract, or open the [illustrated workflow](docs/images/aul-workflow.png).
 
 ## Where to use it
 

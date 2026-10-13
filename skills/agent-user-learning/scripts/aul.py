@@ -46,7 +46,10 @@ def _time(value: Any) -> datetime:
         raise ValueError("expiry must be an ISO timestamp with timezone") from exc
     if result.tzinfo is None:
         raise ValueError("expiry must have a timezone")
-    return result.astimezone(UTC)
+    try:
+        return result.astimezone(UTC)
+    except OverflowError as exc:
+        raise ValueError("expiry must be within the supported UTC date range") from exc
 
 
 class VersionConflict(ValueError):
@@ -227,12 +230,21 @@ class UserLearner:
             raise ValueError("invalid explanation kind")
         with self._lock, self._db:
             self._db.execute("BEGIN")
-            rule = next((r for r in self._records(kind) if r["id"] == rule_id), None)
+            now = datetime.now(UTC)
+            rule = next((r for r in self._records(kind, now) if r["id"] == rule_id), None)
             if not rule:
                 raise ValueError("unknown rule")
             events = [json.loads(row[0]) for row in self._db.execute("SELECT payload FROM aul_events ORDER BY seq")]
             text_key = "action" if kind == "preference" else "value"
-            evidence = [e for e in events if (e["kind"] == kind and e["source_id"] in rule["source_ids"] and e["scope"] == rule["scope"] and e["key"] == rule["key"] and e[text_key] == rule[text_key]) or (kind == "preference" and e["kind"] == "feedback" and e["rule_id"] == rule_id and e["rule_revision"] == rule["revision"])]
+            evidence = [
+                e for e in events
+                if (e["kind"] == kind and e["source_id"] in rule["source_ids"]
+                    and e["scope"] == rule["scope"] and e["key"] == rule["key"]
+                    and e[text_key] == rule[text_key]
+                    and (not e.get("expires_at") or _time(e["expires_at"]) > now))
+                or (kind == "preference" and e["kind"] == "feedback"
+                    and e["rule_id"] == rule_id and e["rule_revision"] == rule["revision"])
+            ]
             return {"version": self.version, "rule": rule, "evidence": evidence}
 
     def policy(self, scopes: list[str] | None = None, *, max_chars: int = 1800, max_rules: int = 6) -> dict:
@@ -416,7 +428,8 @@ def main() -> int:
                 if not isinstance(payload, dict) or set(payload) != {"expected_version", "event"}:
                     raise ValueError("input requires exactly expected_version and event")
                 result = learner.observe(payload["event"], expected_version=payload["expected_version"])
-        print(json.dumps(result, ensure_ascii=False))
+        # JSON escapes preserve Unicode even on legacy terminal/pipe encodings.
+        print(json.dumps(result, ensure_ascii=True))
         return 0
     except (ValueError, OSError, sqlite3.Error) as exc:
         # Do not echo evidence, secrets or user-provided input on failure.

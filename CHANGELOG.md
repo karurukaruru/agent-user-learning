@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add text-and-arrow runtime workflows to both READMEs and a component map to the architecture guide.
+- Preserve Unicode CLI output on terminals and pipes with limited encodings.
+- Reject expiry timestamps that overflow the supported UTC range as invalid input.
+- Exclude expired evidence from explanations, including when a source ID is reused.
+- Add regression coverage for those three boundary cases.
 - Add a workflow diagram that shows host and AUL responsibilities.
 - Add architecture and contribution guides.
 - Make the SDK quick start runnable and use the same demo database in CLI examples.

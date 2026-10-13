@@ -68,7 +68,11 @@ Keep English and Chinese introductions aligned. Detailed contracts belong in
 the protocol or integration guide; the README should help someone understand
 and try the project.
 
-The source diagram is `docs/images/aul-workflow.svg`. Export the matching PNG
+The README files contain the task workflow as text and arrows;
+`docs/architecture.md` contains the component map. Keep those diagrams aligned
+with the engine's read, write, retry and forgetting behavior.
+
+The optional illustrated diagram is `docs/images/aul-workflow.svg`. Export the matching PNG
 after editing it, for example using Inkscape:
 
 ```sh

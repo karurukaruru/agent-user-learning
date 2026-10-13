@@ -1,6 +1,6 @@
 # Agent User Learning（AUL）
 
-**给 Agent 加上用户记忆与学习：记住偏好，下次用上，随纠正更新。**
+**能随纠正更新的 Agent 记忆。**
 
 [English](README.md) · [接入你的项目](INTEGRATE.md) · [架构](docs/architecture.md) · [事件协议](skills/agent-user-learning/references/protocol.md)
 
@@ -130,6 +130,10 @@ Skill 可复制到 Codex、Claude Code、OpenCode 使用的目录，安装位置
 当前是 **0.1.0 本地原型**，使用 Python 标准库和 SQLite。AUL 处理结构化事件；接入方负责从消息提取事件、选择任务场景和调用 agent，并管理身份验证、存储权限和备份删除。数据库使用 schema 2，暂未提供早期版本的迁移工具。
 
 [接入示例](examples/agent_integration.py)及其测试已验证确定性回复函数中的调用流程。各框架的专用适配器和真实交互评估仍需继续完善，包括重复纠正次数、任务完成情况和不相关偏好的使用情况。
+
+## 一起让 AUL 在真实项目里用起来
+
+目前最有价值的贡献是一个实际可用的宿主接入：连接现有 agent 的任务入口，展示跨会话读取、纠正和遗忘。事件提取质量评估，以及让用户查看、修改、忘记记录的小界面，也很有帮助。具体交付物与验收条件见 [贡献优先级](CONTRIBUTING.md#contribution-priorities)。
 
 ## 项目文档
 

@@ -1,6 +1,6 @@
 # Agent User Learning (AUL)
 
-**User memory and learning for agents. Remember preferences, use them next time, and learn from corrections.**
+**Agent memory that learns from corrections.**
 
 [中文说明](README.zh-CN.md) · [Integrate into your project](INTEGRATE.md) · [Architecture](docs/architecture.md) · [Protocol](skills/agent-user-learning/references/protocol.md)
 
@@ -172,6 +172,14 @@ The [integration starter](examples/agent_integration.py) and its tests verify th
 callback flow with a deterministic responder. Framework-specific adapters and
 real interaction testing remain next steps: whether users need fewer repeated
 corrections and whether irrelevant preferences stay out of responses.
+
+## Help make AUL useful in real projects
+
+The most valuable next contribution is a working host integration: connect AUL
+to an existing agent's turn handler and demonstrate recall, correction and
+forgetting across sessions. An extractor evaluation or a small memory review
+interface would also help. See [contribution priorities](CONTRIBUTING.md#contribution-priorities)
+for concrete deliverables and acceptance checks.
 
 ## Project guide
 

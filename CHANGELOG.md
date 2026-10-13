@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Shorten the project tagline and document concrete contribution priorities for real integrations, evaluation and user controls.
 - Add a copyable agent integration request and a runnable read/respond/learn example to both READMEs.
 - Add INTEGRATE.md with SDK/CLI entry points, host responsibilities and acceptance checks.
 - Verify persistent recall, scope selection, correction, forgetting and isolation at the response callback boundary.

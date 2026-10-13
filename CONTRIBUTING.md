@@ -4,6 +4,29 @@ Useful contributions include reproducible fixes, host adapters and examples
 that demonstrate a complete read/write workflow. Start with the [architecture](docs/architecture.md)
 and [event protocol](skills/agent-user-learning/references/protocol.md).
 
+## Contribution priorities
+
+These are open areas for contribution, not completed features. Start with one
+small, reproducible result. An issue describing the intended integration is
+useful for larger changes; small fixes can go straight to a pull request.
+
+| Priority | Contribution | A useful first result |
+| --- | --- | --- |
+| 1 | A real host integration | Wire an existing agent's turn handler to AUL; document installation and pass the acceptance checks in [INTEGRATE.md](INTEGRATE.md), including reopen, correction, forgetting and user isolation. State whether extraction is automatic or uses explicit commands. |
+| 2 | Extraction and relevance evaluation | Publish synthetic or shareable, consented cases with expected events/scopes. Include quoted text, one-off requests, contradictory statements and delayed corrections. Report missed facts, false memories and irrelevant recall separately. |
+| 3 | User memory controls | Add a small host UI or command flow to view evidence, correct a record and forget an item. Show that the next agent turn uses the changed state and another user cannot access it. |
+| 4 | Storage lifecycle and workload measurements | Measure context-read latency and write behavior at documented event counts and concurrency on named hardware. Use results to guide retention, snapshots or migrations; preserve replay, correction and forgetting semantics. |
+
+For a personal agent, a reliable explicit "remember / correct / forget" flow
+is a useful first integration. For a small business application, add the host's
+authentication, user controls and backup/deletion lifecycle, then measure its
+actual workload. AUL's current synthetic tests do not establish production
+scale or extraction quality.
+
+Reports from using AUL in your own project are welcome: what you connected,
+which commands worked, where integration failed, and a minimal synthetic
+reproduction. Do not include private conversations or user databases.
+
 ## Development setup
 
 Use Python 3.11 or newer. Clone the repository, then create a virtual environment:

@@ -1,14 +1,43 @@
 # Agent User Learning（AUL）
 
-**从用户告诉 agent 的信息中学习。**
+**给 Agent 加上用户记忆与学习：记住偏好，下次用上，随纠正更新。**
 
-[English](README.md) · [架构](docs/architecture.md) · [事件协议](skills/agent-user-learning/references/protocol.md) · [接入方式](skills/agent-user-learning/references/integration.md)
+[English](README.md) · [接入你的项目](INTEGRATE.md) · [架构](docs/architecture.md) · [事件协议](skills/agent-user-learning/references/protocol.md)
 
-AUL 保存用户主动分享的兴趣、偏好、目标、习惯和背景。Agent 在执行任务时读取相关上下文，用于安排工作和调整回复；用户纠正时，更新对应记录。
+用户说：“写代码时回复简短一点。”下次处理代码任务时，agent 就能读到这条偏好。后来用户说：“还是一步一步解释吧。”AUL 更新记录；用户要求忘记时，再将它从有效记忆中移除。
 
-项目提供 Python SDK、CLI 和可安装的 Skill，可以接入 agent 或应用。
+AUL 将用户主动表达的偏好、目标和背景保存在各自的 SQLite 数据库里，为每次任务提供少量相关上下文。项目提供 Python SDK、JSON CLI 和可安装的 Skill。引擎在本地运行，需要 Python 3.11+，没有第三方运行时依赖，也不调用模型。
 
-例如，用户希望写代码时简短汇报进度，审阅文章时详细说明修改。AUL 分别保存这两种任务的偏好，供 agent 下次执行对应任务时使用。
+## 直接让你的 Agent 接入
+
+打开自己的项目，把这段话交给 coding agent：
+
+> 把 AUL（https://github.com/karurukaruru/agent-user-learning）接入这个项目，作为用户记忆与学习层。先读该仓库的 INTEGRATE.md，接到现有 agent 的任务流程中，并用测试验证跨会话保存、相关记忆读取、纠正和遗忘。请实际完成接入，并说明哪些已可用、哪些还需要接线。
+
+[INTEGRATE.md](INTEGRATE.md) 提供具体接入任务：从哪里连接、如何安装、调用哪些接口，以及怎样验证结果。
+
+**目前已有：**存储、按场景读取、证据追溯、纠正和遗忘。宿主需要连接任务流程，并从用户消息提取结构化事件；还没有提取器时，可以先接上明确的“记住”命令。AUL 负责用户记忆，可以与现有文档检索和聊天历史一起使用。
+
+## 跑通完整流程
+
+需要 Git 和 Python 3.11+，在自己的 Python 环境中运行：
+
+```sh
+git clone https://github.com/karurukaruru/agent-user-learning.git
+cd agent-user-learning
+python -m pip install .
+python examples/agent_integration.py
+```
+
+```text
+1. Before learning: Review this patch | reply style: default
+2. Next session: Review this patch | reply style: Use short replies.
+3. Different task: Review this draft | reply style: default
+4. After correction: Review this patch | reply style: Explain step by step.
+5. After forgetting: Review this patch | reply style: default
+```
+
+示例会关闭并重新打开真实的 SQLite 数据库，把上下文传入回复函数，结束后清理临时数据。回复函数是确定性的演示实现，不需要 API Key。接入时将 `demo_respond` 替换为现有 agent 调用，并将用户上下文作为低优先级数据传入。见 [完整示例源码](examples/agent_integration.py)。
 
 ## 运行流程
 
@@ -52,18 +81,9 @@ Host 选择场景并提取事件；AUL 校验、保存和选择用户上下文�
 
 每条记录保留证据和来源，用户可以纠正或遗忘。Agent 在当前任务中读取相关记录，由接入方将它们用于回复或执行。
 
-## 快速试用
+## 使用 Python SDK
 
-需要 Python 3.11 或更新版本，在项目目录执行：
-
-```sh
-python -m pip install .
-python examples/user_learning_demo.py
-```
-
-演示使用虚构用户和内存数据库，可离线运行。它展示目标和偏好如何进入上下文、纠正如何替换旧值，以及遗忘后还剩哪些记录。
-
-安装后，在项目目录运行这个 SDK 示例：
+完成上述安装后，在项目目录运行这个 SDK 示例：
 
 ```python
 from agent_user_learning import UserLearner
@@ -109,12 +129,14 @@ Skill 可复制到 Codex、Claude Code、OpenCode 使用的目录，安装位置
 
 当前是 **0.1.0 本地原型**，使用 Python 标准库和 SQLite。AUL 处理结构化事件；接入方负责从消息提取事件、选择任务场景和调用 agent，并管理身份验证、存储权限和备份删除。数据库使用 schema 2，暂未提供早期版本的迁移工具。
 
-下一步是完善 agent 和产品的接入方式，评估重复纠正次数、任务完成情况和不相关偏好的使用情况。
+[接入示例](examples/agent_integration.py)及其测试已验证确定性回复函数中的调用流程。各框架的专用适配器和真实交互评估仍需继续完善，包括重复纠正次数、任务完成情况和不相关偏好的使用情况。
 
 ## 项目文档
 
 | 文档 | 内容 |
 | --- | --- |
+| [接入任务书](INTEGRATE.md) | 交给 coding agent，完成实际接入与验收 |
+| [可运行示例](examples/agent_integration.py) | 跨会话保存、回复函数、场景读取、纠正和遗忘 |
 | [Architecture](docs/architecture.md) | 生命周期、组件、存储和版本冲突 |
 | [Protocol](skills/agent-user-learning/references/protocol.md) | 事件格式、场景、上下文限制和用户控制 |
 | [Integration](skills/agent-user-learning/references/integration.md) | Host 接入要求和评估方式 |

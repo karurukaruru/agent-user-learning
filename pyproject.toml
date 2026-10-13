@@ -5,13 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agent-user-learning"
 version = "0.1.0"
-description = "An evidence-based user understanding and adaptation layer for AI agents."
+description = "Local user memory and learning for agents: preferences, scoped recall, corrections and forgetting."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "karurukaruru"}]
-keywords = ["agent", "personalization", "user-learning", "skill"]
+keywords = ["agent", "agent-memory", "personalization", "user-learning", "skill"]
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/karurukaruru/agent-user-learning"
+Documentation = "https://github.com/karurukaruru/agent-user-learning/blob/main/INTEGRATE.md"
+Issues = "https://github.com/karurukaruru/agent-user-learning/issues"
 
 [project.scripts]
 aul = "agent_user_learning.engine:main"

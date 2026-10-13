@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a copyable agent integration request and a runnable read/respond/learn example to both READMEs.
+- Add INTEGRATE.md with SDK/CLI entry points, host responsibilities and acceptance checks.
+- Verify persistent recall, scope selection, correction, forgetting and isolation at the response callback boundary.
+- Add repository links and user-memory keywords to package metadata.
 - Add text-and-arrow runtime workflows to both READMEs and a component map to the architecture guide.
 - Preserve Unicode CLI output on terminals and pipes with limited encodings.
 - Reject expiry timestamps that overflow the supported UTC range as invalid input.

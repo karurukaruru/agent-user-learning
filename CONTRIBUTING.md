@@ -21,6 +21,7 @@ python -m pip install -e .
 python -m unittest discover -s tests -v
 python scripts/sync_skill.py --check
 python examples/user_learning_demo.py
+python examples/agent_integration.py
 ```
 
 The runtime uses the standard library. Installation may obtain setuptools for
@@ -55,7 +56,8 @@ replace personal evidence with a synthetic equivalent.
 
 Explain the failure or use case, the resulting behavior, and the checks you
 ran. Identify which results came from automated tests and which came from a
-running host application. An adapter should document its lifecycle calls,
+running host application. Use [the integration brief](INTEGRATE.md) for the
+acceptance checks an adapter should pass. An adapter should document its lifecycle calls,
 per-user storage, conflict handling and user control interface.
 
 GitHub Actions runs installation, tests, runtime sync and the offline demo on

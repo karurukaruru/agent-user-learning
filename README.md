@@ -1,14 +1,57 @@
 # Agent User Learning (AUL)
 
-**Learn from what users tell an agent.**
+**User memory and learning for agents. Remember preferences, use them next time, and learn from corrections.**
 
-[中文说明](README.zh-CN.md) · [Architecture](docs/architecture.md) · [Protocol](skills/agent-user-learning/references/protocol.md) · [Integration](skills/agent-user-learning/references/integration.md)
+[中文说明](README.zh-CN.md) · [Integrate into your project](INTEGRATE.md) · [Architecture](docs/architecture.md) · [Protocol](skills/agent-user-learning/references/protocol.md)
 
-AUL stores what users share about their interests, preferences, goals, habits and background. Agents read the relevant context for a task, use it to guide their work, and update it when the user makes a correction.
+A user says, "Keep coding replies short." On the next coding task, the agent
+receives that preference. Later the user says, "Explain step by step instead."
+AUL updates it. If the user asks to forget it, it leaves the active memory.
 
-For example, a user asks for brief progress updates while coding and detailed comments when reviewing a draft. AUL keeps the two preferences under separate task labels, so the agent can use the appropriate one next time.
+AUL stores user-stated preferences, goals and background in a per-user SQLite
+database, then returns a small, relevant context for each task. Use it through
+a Python SDK, JSON CLI or portable Skill. The engine runs locally with Python
+3.11+, no runtime dependencies and no model calls.
 
-Use the Python SDK, CLI or portable Skill to add user context to an agent or application.
+## Ask your agent to integrate AUL
+
+Copy this into your coding agent with your project open:
+
+> Integrate AUL (https://github.com/karurukaruru/agent-user-learning) into this project as its user memory and learning layer. Read INTEGRATE.md in that repository, wire it into our existing agent's turn flow, and verify persistence, relevant recall, correction and forgetting with tests. Implement the integration, and tell me what works and what still needs wiring.
+
+[INTEGRATE.md](INTEGRATE.md) gives the agent a concrete implementation brief:
+where to connect, how to install, which APIs to call, and what to verify.
+
+**What you get today:** storage, scoped recall, evidence, corrections and
+forgetting. Your host connects the lifecycle and extracts structured events
+from user messages. Start with explicit remember commands if you have no
+extractor yet. Use AUL for user memory alongside your existing document search
+and conversation history.
+
+## Try the complete loop
+
+Requires Git and Python 3.11+. Run in your Python environment:
+
+```sh
+git clone https://github.com/karurukaruru/agent-user-learning.git
+cd agent-user-learning
+python -m pip install .
+python examples/agent_integration.py
+```
+
+```text
+1. Before learning: Review this patch | reply style: default
+2. Next session: Review this patch | reply style: Use short replies.
+3. Different task: Review this draft | reply style: default
+4. After correction: Review this patch | reply style: Explain step by step.
+5. After forgetting: Review this patch | reply style: default
+```
+
+The demo closes and reopens a real SQLite database, passes context to a response
+callback, and removes its temporary data when finished. Its responder is a
+deterministic stub; no API key is needed. Replace `demo_respond` with your
+existing agent call, keeping the user context as lower-priority data.
+See the [starter source](examples/agent_integration.py).
 
 ## Runtime workflow
 
@@ -56,18 +99,9 @@ The host chooses scopes and extracts events. AUL validates, stores and selects t
 
 **User attributes** describe the user's background and needs. **Behavior rules** describe how they want help. Each record keeps its source, and the user can correct or forget it. An agent reads a small set of relevant records for the current task.
 
-## Try it locally
+## Use the Python SDK
 
-Python 3.11 or newer. From this repository:
-
-```sh
-python -m pip install .
-python examples/user_learning_demo.py
-```
-
-The offline demo uses a fictional user and an in-memory database. It shows how a goal and a preference enter the context, how a correction replaces an old value, and what remains after forgetting.
-
-To use the SDK, run this example from the repository directory after installation:
+After the installation above, run this example from the repository directory:
 
 ```python
 from agent_user_learning import UserLearner
@@ -134,12 +168,17 @@ python scripts/sync_skill.py --check
 
 Change the SDK engine first, then run `python scripts/sync_skill.py` to regenerate the portable runtime. Tests cover user understanding, behavior adaptation, scope precedence, expiry, forgetting, replay, concurrent writers, bounded context and offline CLI portability.
 
-Next steps are host adapters and real interaction testing: whether users need fewer repeated corrections, whether tasks are completed more effectively, and whether irrelevant preferences stay out of the response.
+The [integration starter](examples/agent_integration.py) and its tests verify the
+callback flow with a deterministic responder. Framework-specific adapters and
+real interaction testing remain next steps: whether users need fewer repeated
+corrections and whether irrelevant preferences stay out of responses.
 
 ## Project guide
 
 | Resource | Contents |
 | --- | --- |
+| [Integration brief](INTEGRATE.md) | Give this to your coding agent to implement and verify an integration |
+| [Runnable starter](examples/agent_integration.py) | Persistence, response callback, scoped recall, correction and forgetting |
 | [Architecture](docs/architecture.md) | Lifecycle, components, storage and conflict handling |
 | [Protocol](skills/agent-user-learning/references/protocol.md) | Event fields, scopes, context limits and user controls |
 | [Integration](skills/agent-user-learning/references/integration.md) | Host responsibilities and evaluation |
